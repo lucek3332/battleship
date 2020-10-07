@@ -2,8 +2,8 @@ import pygame
 
 
 class Game:
-    def __init__(self):
-        pass
+    def __init__(self, pk):
+        self.id = pk
 
 
 class Field:
@@ -27,12 +27,12 @@ class Field:
         self.ship = False
         self.sinked = False
 
-
     def draw(self, win):
         pygame.draw.rect(win, self.color, self.rect)
         pygame.draw.rect(win, self.border_color, self.rect, 1)
         if self.sinked:
-            pygame.draw.line(win, self.lines_color, (self.x, self.y), (self.x + self.width, self.y + self.height) )
+            pygame.draw.line(win, self.lines_color, (self.x, self.y), (self.x + self.width, self.y + self.height))
+            pygame.draw.line(win, self.lines_color, (self.x, self.y + self.height), (self.x + self.width, self.y))
         elif self.hitted:
             pygame.draw.circle(win, self.circle_color, (round(self.x + self.width/2), round(self.y + self.height/2)), 5)
 
@@ -64,9 +64,40 @@ class Board:
     def draw(self, win):
         for row in self.fields:
             for field in row:
+
                 field.draw(win)
 
 
 class Ship:
-    def __init__(self):
-        pass
+    width = 40
+    height = 40
+    image = pygame.image.load("images/ship.png")
+
+    def __init__(self, mast, x, y):
+        self.x = x
+        self.y = y
+        self.mast = mast
+        self.rect = (self.x, self.y, self.mast * self.width, self.height)
+        self.draging = False
+
+    def draw(self, win):
+        for i in range(self.mast):
+            win.blit(self.image, (self.x + i * self.width, self.y))
+            pygame.draw.rect(win, (255, 0, 0), self.rect, 4)
+
+    def click(self):
+        pos = pygame.mouse.get_pos()
+        if self.x <= pos[0] <= self.x + (self.width * self.mast):
+            if self.y <= pos[1] <= self.y + self.height:
+                return True
+        return False
+
+    def drag(self):
+        pos = pygame.mouse.get_pos()
+        self.x = pos[0]
+        self.y = pos[1]
+        self.rect = (self.x, self.y, self.mast * self.width, self.height)
+
+    def drop(self):
+        pos = pygame.mouse.get_pos()
+

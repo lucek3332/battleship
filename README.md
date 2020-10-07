@@ -1,7 +1,7 @@
 # Battleship
 
 ## About game
-Online game for 2 players witten in Python/Pygame.
+Online game for 2 players written in Python/Pygame.
 
 ## Controls
 

@@ -1,5 +1,6 @@
 import pygame
-from classes import Board, Ship
+from board import Board
+from ship import Ship
 
 pygame.init()
 

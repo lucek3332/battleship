@@ -42,26 +42,49 @@ class Button:
         return False
 
 
-def redrawWindow(win, my_board, enemy_board, ships, buttons):
+def redrawWindowSetting(win, my_board, ships, buttons):
     win.fill((162, 213, 252))
     font = pygame.font.SysFont("Arial", 40)
-    txt = font.render("MY BOARD", True, (255, 255, 255), True)
-    win.blit(txt, (180, 50))
+    txt = font.render("SETT UP YOUR SHIPS", True, (0, 0, 0), True)
+    win.blit(txt, (80, 50))
+    font2 = pygame.font.SysFont("Arial", 30)
+    txt2 = font2.render("For setting up the ship on the board, click on", True, (0, 0, 0))
+    txt3 = font2.render("the ship, drag in correct place and click again.", True, (0, 0, 0))
+    txt4 = font2.render("For rotating the ship use SPACE. When you", True, (0, 0, 0))
+    txt5 = font2.render("will have sett up all ships hit the PLAY button.", True, (0, 0, 0))
+    txt6 = font2.render("If you made some mistake, hit the RESET", True, (0, 0, 0))
+    txt7 = font2.render("button.", True, (0, 0, 0))
+    win.blit(txt2, (470, 100))
+    win.blit(txt3, (470, 160))
+    win.blit(txt4, (470, 220))
+    win.blit(txt5, (470, 280))
+    win.blit(txt6, (470, 340))
+    win.blit(txt7, (470, 400))
     my_board.draw(win)
-    enemy_board.draw(win)
     for ship in ships:
         ship.draw(win)
     for button in buttons:
         button.draw(win)
     pygame.display.update()
 
-def redrawWindowGame(win, my_board, enemy_board, ships):
+
+def redrawWindowWaiting(win, my_board, ships):
     win.fill((162, 213, 252))
-    font = pygame.font.SysFont("Arial", 40)
-    txt = font.render("MY BOARD", True, (255, 255, 255), True)
-    win.blit(txt, (180, 50))
+    font = pygame.font.SysFont("Arial", 60)
+    txt = font.render("WAITING FOR", True, (0, 0, 0), True)
+    txt2 = font.render("OTHER PLAYER", True, (0, 0, 0), True)
+    win.blit(txt, (540, 200))
+    win.blit(txt2, (520, 300))
     my_board.draw(win)
+    for ship in ships:
+        ship.draw(win)
+    pygame.display.update()
+
+
+def redrawWindowPlaying(win, my_board, enemy_board, ships):
+    win.fill((162, 213, 252))
     enemy_board.draw(win)
+    my_board.draw(win)
     for ship in ships:
         ship.draw(win)
     pygame.display.update()
@@ -69,28 +92,22 @@ def redrawWindowGame(win, my_board, enemy_board, ships):
 
 def main():
     run = True
-    n = Network()
     b = Board()
     ships = [Ship(4, 50, 530), Ship(3, 50, 590), Ship(3, 200, 590), Ship(2, 50, 650), Ship(2, 150, 650), Ship(2, 250, 650), Ship(1, 50, 710), Ship(1, 110, 710), Ship(1, 170, 710), Ship(1, 230, 710)]
     reset_btn = Button("RESET", 350, 520, 100, 40, (194, 8, 23))
-    confirm_btn = Button("CONFIRM", 350, 580, 100, 40, (6, 122, 16))
-    status_game = "menu"
-    game = None
+    play_btn = Button("PLAY", 350, 580, 100, 40, (6, 122, 16))
+    status_game = "setting up"
     while run:
-        if not game:
-            b2 = n.send(b)
-            b2.x = 550
-            b2.y = 100
-            redrawWindow(screen, b, b2, ships, Button.buttons)
+        if status_game == 'setting up':
+            redrawWindowSetting(screen, b, ships, Button.buttons)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
                     pygame.quit()
-                if event.type == pygame.MOUSEBUTTONUP and reset_btn.click() and not game:
+                if event.type == pygame.MOUSEBUTTONUP and reset_btn.click():
                     b.reset_board(ships)
-                if event.type == pygame.MOUSEBUTTONUP and confirm_btn.click() and b.is_ready() and not game:
-                    game = n.send("ready")
-                    b2.is_active = True
+                if event.type == pygame.MOUSEBUTTONUP and play_btn.click() and b.is_ready():
+                    status_game = "connecting"
                 for ship in ships:
                     if event.type == pygame.MOUSEBUTTONUP and ship.click() and not ship.placed:
                         if ship.draging:
@@ -101,33 +118,30 @@ def main():
                             ship.rotate()
                     elif event.type == pygame.MOUSEMOTION and ship.draging is True:
                         ship.drag()
-        elif not game.ready_to_play():
-            b2 = n.send(b)
-            game = n.send("get_game")
+        elif status_game == "connecting":
+            n = Network()
+            status_game = "waiting"
+        elif status_game == "waiting":
+            game = n.send(b)
+            redrawWindowWaiting(screen, b, ships)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                    pygame.quit()
+            if game.both_connected:
+                status_game = "playing"
+        elif status_game == "playing":
+            game = n.send("get game")
+            if n.id == "0":
+                b2 = game.boards[1]
+            else:
+                b2 = game.boards[0]
             b2.x = 550
             b2.y = 100
-            redrawWindowGame(screen, b, b2, ships)
+            redrawWindowPlaying(screen, b, b2, ships)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
                     pygame.quit()
-        elif game.ready_to_play():
-            b = n.send(b2)
-            b.x = 50
-            b.y = 100
-            redrawWindowGame(screen, b, b2, ships)
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    run = False
-                    pygame.quit()
-                if event.type == pygame.MOUSEBUTTONUP and b2.is_active:
-                    for row in b2.fields:
-                        for field in row:
-                            if field.active and field.click():
-                                print("hitted")
-        print(game)
-        if game is not None:
-            print(game.ready_to_play())
-
 
 main()

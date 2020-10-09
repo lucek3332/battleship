@@ -10,6 +10,7 @@ class Board:
         self.y = y
         self.fields = [[Field(i, j, self.x, self.y) for i in self.x_axis] for j in self.y_axis]
         self.is_active = False
+        self.nr = 1
 
     def draw(self, win):
         self.update()
@@ -39,4 +40,4 @@ class Board:
         return False
 
     def __repr__(self):
-        return "Board x: {} y: {}".format(self.x, self.y)
+        return "Board {}, x: {} y: {}".format(self.nr, self.x, self.y)

@@ -1,12 +1,9 @@
-from board import Board
-
-
 class Game:
     def __init__(self, pk):
         self.id = pk
-        self.is_ready = False
+        self.both_connected = False
         self.turn = "0"
-        self.boards = [Board(), Board()]
+        self.boards = [None, None]
         self.p1ships = False
         self.p2ships = False
         self.wins = [0, 0]

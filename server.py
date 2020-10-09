@@ -17,46 +17,47 @@ except socket.error as e:
     print(e)
 
 
-def threaded_client(conn, player, gameID):
-    conn.send(str.encode(str(player)))
-    game = games[gameID]
+def threaded_client(c, player, gameID):
+    global currentPlayers
+    c.send(str.encode(str(player)))
+
     while True:
         try:
-            data = pickle.loads(conn.recv(4096*32))
-            if isinstance(data, Board):
-                if not game.ready_to_play():
-                    game.boards[player] = data
-                    if player == 0:
-                        reply = game.boards[1]
-                    else:
-                        reply = game.boards[0]
+            data = pickle.loads(c.recv(4096*32))
+            if gameID in games:
+                game = games[gameID]
+
+                if not data:
+                    break
                 else:
-                    if player == 0:
-                        game.boards[1] = data
-                    else:
-                        game.boards[0] = data
-                    reply = game.boards[player]
+                    if isinstance(data, Board):
+                        if player == 0:
+                            game.boards[0] = data
+                        else:
+                            game.boards[1] = data
+                    reply = game
+                    c.sendall(pickle.dumps(reply))
             else:
-                if data == "ready":
-                    if player == 0:
-                        game.p1ships = True
-                    else:
-                        game.p2ships = True
-                reply = game
-            if not data:
-                print("Disconnected")
                 break
-            conn.sendall(pickle.dumps(reply))
         except Exception as e:
             print("bład")
             print(e)
             break
-    print("Closing connection")
-    conn.close()
+    print("Lost connection")
+    try:
+        if currentPlayers % 2 == 1:
+            del games[gameID]
+            print("Closing game {}".format(gameID))
+        else:
+            game.both_connected = False
+    except:
+        pass
+    currentPlayers -= 1
+    c.close()
 
 
 s.listen()
-currentPlayer = 0
+currentPlayers = 0
 games = {}
 gameID = 0
 
@@ -64,12 +65,12 @@ while True:
     conn, addr = s.accept()
     print("Connected to {}".format(addr))
     p = 0
-    gameID = currentPlayer // 2
-    if currentPlayer % 2 == 0:
+    currentPlayers += 1
+    gameID = (currentPlayers - 1) // 2
+    if currentPlayers % 2 == 1:
         games[gameID] = Game(gameID)
         print("Creating new game: {}".format(gameID))
     else:
-        games[gameID].is_ready = True
+        games[gameID].both_connected = True
         p = 1
     start_new_thread(threaded_client, (conn, p, gameID))
-    currentPlayer += 1

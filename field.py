@@ -31,8 +31,8 @@ class Field:
             pygame.draw.line(win, self.lines_color, (self.x, self.y + self.height), (self.x + self.width, self.y))
         elif self.hitted:
             pygame.draw.circle(win, self.circle_color, (round(self.x + self.width/2), round(self.y + self.height/2)), 5)
-        if not self.shipAvaiable:
-            pygame.draw.rect(win, (0, 255, 0), self.rect)
+        if self.ship:
+             pygame.draw.rect(win, (0, 255, 0), self.rect)
 
     def click(self):
         pos = pygame.mouse.get_pos()

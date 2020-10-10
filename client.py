@@ -68,6 +68,14 @@ def redrawWindowSetting(win, my_board, ships, buttons):
     pygame.display.update()
 
 
+def redrawWindowDisconnected(win):
+    win.fill((162, 213, 252))
+    font = pygame.font.SysFont("Arial", 60)
+    txt = font.render("OPPONENT HAS DISCONNECTED", True, (255, 0, 0), True)
+    win.blit(txt, (round(win.get_width()/2 - txt.get_width()/2), round(win.get_height()/2 - txt.get_height()/2)))
+    pygame.display.update()
+
+
 def redrawWindowWaiting(win, my_board, ships):
     win.fill((162, 213, 252))
     font = pygame.font.SysFont("Arial", 60)
@@ -81,10 +89,17 @@ def redrawWindowWaiting(win, my_board, ships):
     pygame.display.update()
 
 
-def redrawWindowPlaying(win, my_board, enemy_board, ships):
+def redrawWindowPlaying(win, my_board, enemy_board, ships, playerID, game):
     win.fill((162, 213, 252))
     enemy_board.draw(win)
     my_board.draw(win)
+    font = pygame.font.SysFont("Arial", 30)
+    if playerID == game.turn:
+        txt = font.render("YOUR TURN", True, (255, 0, 0), True)
+        win.blit(txt, (670, 50))
+    else:
+        txt = font.render("OPPONENT TURN", True, (0, 0, 0), True)
+        win.blit(txt, (140, 50))
     for ship in ships:
         ship.draw(win)
     pygame.display.update()
@@ -133,15 +148,38 @@ def main():
         elif status_game == "playing":
             game = n.send("get game")
             if n.id == "0":
+                b = game.boards[0]
                 b2 = game.boards[1]
             else:
+                b = game.boards[1]
                 b2 = game.boards[0]
+            b.x = 50
+            b.y = 100
             b2.x = 550
             b2.y = 100
-            redrawWindowPlaying(screen, b, b2, ships)
+
+            if not game.both_connected:
+                status_game = "player disconnected"
+                b.reset_board(ships)
+
+            redrawWindowPlaying(screen, b, b2, ships, n.id, game)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
                     pygame.quit()
+                if event.type == pygame.MOUSEBUTTONUP and game.turn == n.id:
+                    for row in b2.fields:
+                        for field in row:
+                            if field.click():
+                                if field.ship:
+                                    n.send(("hitted", b2))
+                                else:
+                                    n.send(("missed", b2))
+
+        elif status_game == "player disconnected":
+            redrawWindowDisconnected(screen)
+            pygame.time.delay(2000)
+            status_game = "setting up"
+
 
 main()

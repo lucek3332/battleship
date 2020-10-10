@@ -35,6 +35,21 @@ def threaded_client(c, player, gameID):
                             game.boards[0] = data
                         else:
                             game.boards[1] = data
+                    if isinstance(data, tuple):
+                        if data[0] == "missed":
+                            if player == 0:
+                                game.boards[1] = data[1]
+                                game.turn = "1"
+                            else:
+                                game.turn = "0"
+                                game.boards[0] = data[1]
+                        elif data[0] == "hitted":
+                            if player == 0:
+                                game.boards[1] = data[1]
+                                game.turn = "0"
+                            else:
+                                game.turn = "1"
+                                game.boards[0] = data[1]
                     reply = game
                     c.sendall(pickle.dumps(reply))
             else:

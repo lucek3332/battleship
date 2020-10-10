@@ -27,7 +27,7 @@ class Ship:
         else:
             for i in range(self.mast):
                 win.blit(self.image, (self.x, self.y + i * self.height))
-        pygame.draw.rect(win, (255, 0, 0), self.rect, 4)
+        # pygame.draw.rect(win, (255, 0, 0), self.rect, 4)
 
     def click(self):
         pos = pygame.mouse.get_pos()

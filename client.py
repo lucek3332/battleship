@@ -75,6 +75,17 @@ def redrawWindowDisconnected(win):
     win.blit(txt, (round(win.get_width()/2 - txt.get_width()/2), round(win.get_height()/2 - txt.get_height()/2)))
     pygame.display.update()
 
+def redrawWindowWinner(win, game, playerID):
+    win.fill((162, 213, 252))
+    font = pygame.font.SysFont("Arial", 60)
+    if game.winner == playerID:
+        txt = font.render("YOU WIN!", True, (255, 0, 0), True)
+        win.blit(txt, (round(win.get_width()/2 - txt.get_width()/2), round(win.get_height()/2 - txt.get_height()/2)))
+    else:
+        txt = font.render("YOU LOST...", True, (0, 0, 0), True)
+        win.blit(txt, (round(win.get_width()/2 - txt.get_width()/2), round(win.get_height()/2 - txt.get_height()/2)))
+    pygame.display.update()
+
 
 def redrawWindowWaiting(win, my_board, ships):
     win.fill((162, 213, 252))
@@ -158,6 +169,9 @@ def main():
             b2.x = 550
             b2.y = 100
 
+            if game.is_winner():
+                status_game = "winner"
+
             if not game.both_connected:
                 status_game = "player disconnected"
                 b.reset_board(ships)
@@ -172,10 +186,15 @@ def main():
                         for field in row:
                             if field.click():
                                 if field.ship:
+                                    b2.looking_ship(field.row, field.col)
                                     n.send(("hitted", b2))
                                 else:
                                     n.send(("missed", b2))
-
+        elif status_game == "winner":
+            redrawWindowWinner(screen, game, n.id)
+            pygame.time.delay(2000)
+            status_game = "setting up"
+            b.reset_board(ships)
         elif status_game == "player disconnected":
             redrawWindowDisconnected(screen)
             pygame.time.delay(2000)

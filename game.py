@@ -4,12 +4,19 @@ class Game:
         self.both_connected = False
         self.turn = "0"
         self.boards = [None, None]
-        self.p1ships = False
-        self.p2ships = False
+        self.winner = False
         self.wins = [0, 0]
 
-    def ready_to_play(self):
-        if self.p1ships and self.p2ships:
+    def is_winner(self):
+        sum1 = sum(1 if field.sinked else 0 for row in self.boards[0].fields for field in row)
+        sum2 = sum(1 if field.sinked else 0 for row in self.boards[1].fields for field in row)
+        if sum1 == 20:
+            self.winner = "1"
+            self.wins[1] += 1
+            return True
+        elif sum2 == 20:
+            self.winner = "0"
+            self.wins[0] += 1
             return True
         return False
 

@@ -20,10 +20,20 @@ except socket.error as e:
 def threaded_client(c, player, gameID):
     global currentPlayers
     c.send(str.encode(str(player)))
-
     while True:
         try:
-            data = pickle.loads(c.recv(4096*32))
+            data_bytes = b""
+            new_data = True
+            while True:
+                if new_data:
+                    data_len = int(c.recv(20))
+                    new_data = False
+                else:
+                    packet = c.recv(1024)
+                    data_bytes += packet
+                    if len(data_bytes) == data_len:
+                        break
+            data = pickle.loads(data_bytes)
             if gameID in games:
                 game = games[gameID]
 
@@ -51,12 +61,13 @@ def threaded_client(c, player, gameID):
                                 game.turn = "1"
                                 game.boards[0] = data[1]
                     reply = game
-                    c.sendall(pickle.dumps(reply))
+                    sending_bytes = pickle.dumps(reply)
+                    header_sending = "{0:<20}".format(len(sending_bytes))
+                    sending = bytes(header_sending, "utf-8") + sending_bytes
+                    c.sendall(sending)
             else:
                 break
-        except Exception as e:
-            print("bład")
-            print(e)
+        except:
             break
     print("Lost connection")
     try:

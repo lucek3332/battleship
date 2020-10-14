@@ -3,6 +3,7 @@ from board import Board
 from ship import Ship
 from network import Network
 
+
 pygame.init()
 
 # Images

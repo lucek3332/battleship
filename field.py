@@ -36,8 +36,8 @@ class Field:
 
     def click(self):
         pos = pygame.mouse.get_pos()
-        if self.x <= pos[0] <= self.x + self.width and self.active:
-            if self.y <= pos[1] <= self.y + self.height:
+        if self.x < pos[0] < self.x + self.width and self.active:
+            if self.y < pos[1] < self.y + self.height:
                 if self.ship:
                     self.sinked = True
                 else:

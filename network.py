@@ -39,3 +39,6 @@ class Network:
                 if len(data_bytes) == data_len:
                     break
         return pickle.loads(data_bytes)
+
+    def close(self):
+        self.client.close()

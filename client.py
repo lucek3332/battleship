@@ -9,6 +9,8 @@ pygame.init()
 # Images
 icon = pygame.image.load("images/icon.png")
 
+# Music / sounds
+
 screenWidth = 1000
 screenHeight = 800
 pygame.display.set_icon(icon)
@@ -43,7 +45,7 @@ class Button:
         return False
 
 
-def redrawWindowSetting(win, my_board, ships, buttons):
+def redrawWindowSetting(win, my_board, ships, buttons, wins, loses):
     win.fill((162, 213, 252))
     font = pygame.font.SysFont("Arial", 40)
     txt = font.render("SETT UP YOUR SHIPS", True, (0, 0, 0), True)
@@ -66,6 +68,8 @@ def redrawWindowSetting(win, my_board, ships, buttons):
         ship.draw(win)
     for button in buttons:
         button.draw(win)
+    score = font2.render("W: {} / L: {}".format(wins, loses), True, (0, 0, 0), True)
+    win.blit(score, (820, 720))
     pygame.display.update()
 
 
@@ -75,6 +79,7 @@ def redrawWindowDisconnected(win):
     txt = font.render("OPPONENT HAS DISCONNECTED", True, (255, 0, 0), True)
     win.blit(txt, (round(win.get_width()/2 - txt.get_width()/2), round(win.get_height()/2 - txt.get_height()/2)))
     pygame.display.update()
+
 
 def redrawWindowWinner(win, game, playerID):
     win.fill((162, 213, 252))
@@ -88,20 +93,23 @@ def redrawWindowWinner(win, game, playerID):
     pygame.display.update()
 
 
-def redrawWindowWaiting(win, my_board, ships):
+def redrawWindowWaiting(win, my_board, ships, wins, loses):
     win.fill((162, 213, 252))
     font = pygame.font.SysFont("Arial", 60)
     txt = font.render("WAITING FOR", True, (0, 0, 0), True)
     txt2 = font.render("OTHER PLAYER", True, (0, 0, 0), True)
+    font2 = pygame.font.SysFont("Arial", 30)
     win.blit(txt, (540, 200))
     win.blit(txt2, (520, 300))
     my_board.draw(win)
     for ship in ships:
         ship.draw(win)
+    score = font2.render("W: {} / L: {}".format(wins, loses), True, (0, 0, 0), True)
+    win.blit(score, (820, 720))
     pygame.display.update()
 
 
-def redrawWindowPlaying(win, my_board, enemy_board, ships, playerID, game):
+def redrawWindowPlaying(win, my_board, enemy_board, ships, playerID, game, ships_count, wins, loses):
     win.fill((162, 213, 252))
     enemy_board.draw(win)
     my_board.draw(win)
@@ -114,6 +122,10 @@ def redrawWindowPlaying(win, my_board, enemy_board, ships, playerID, game):
         win.blit(txt, (140, 50))
     for ship in ships:
         ship.draw(win)
+    score = font.render("W: {} / L: {}".format(wins, loses), True, (0, 0, 0), True)
+    ships_counter = font.render("Ships: {} / 20".format(ships_count), True, (0, 0, 0), True)
+    win.blit(score, (820, 720))
+    win.blit(ships_counter, (820, 660))
     pygame.display.update()
 
 
@@ -123,10 +135,13 @@ def main():
     ships = [Ship(4, 50, 530), Ship(3, 50, 590), Ship(3, 200, 590), Ship(2, 50, 650), Ship(2, 150, 650), Ship(2, 250, 650), Ship(1, 50, 710), Ship(1, 110, 710), Ship(1, 170, 710), Ship(1, 230, 710)]
     reset_btn = Button("RESET", 350, 520, 100, 40, (194, 8, 23))
     play_btn = Button("PLAY", 350, 580, 100, 40, (6, 122, 16))
+    ships_count = 0
+    wins = 0
+    loses = 0
     status_game = "setting up"
     while run:
         if status_game == 'setting up':
-            redrawWindowSetting(screen, b, ships, Button.buttons)
+            redrawWindowSetting(screen, b, ships, Button.buttons, wins, loses)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
@@ -150,7 +165,7 @@ def main():
             status_game = "waiting"
         elif status_game == "waiting":
             game = n.send(b)
-            redrawWindowWaiting(screen, b, ships)
+            redrawWindowWaiting(screen, b, ships, wins, loses)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
@@ -177,7 +192,7 @@ def main():
                 status_game = "player disconnected"
                 b.reset_board(ships)
 
-            redrawWindowPlaying(screen, b, b2, ships, n.id, game)
+            redrawWindowPlaying(screen, b, b2, ships, n.id, game, ships_count, wins, loses)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     run = False
@@ -189,16 +204,24 @@ def main():
                                 if field.ship:
                                     b2.looking_ship(field.row, field.col)
                                     n.send(("hitted", b2))
+                                    ships_count += 1
+                                    if ships_count > 19:
+                                        ships_count = 0
                                 else:
                                     n.send(("missed", b2))
         elif status_game == "winner":
             redrawWindowWinner(screen, game, n.id)
             pygame.time.delay(2000)
+            if n.id == game.winner:
+                wins += 1
+            else:
+                loses += 1
             status_game = "setting up"
             b.reset_board(ships)
         elif status_game == "player disconnected":
             redrawWindowDisconnected(screen)
             pygame.time.delay(2000)
+            n.close()
             status_game = "setting up"
 
 

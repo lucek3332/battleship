@@ -27,7 +27,6 @@ class Ship:
         else:
             for i in range(self.mast):
                 win.blit(self.image, (self.x, self.y + i * self.height))
-        # pygame.draw.rect(win, (255, 0, 0), self.rect, 4)
 
     def click(self):
         pos = pygame.mouse.get_pos()
@@ -52,6 +51,8 @@ class Ship:
         self.update()
 
     def drop(self, board):
+        """Constraints for dropping ship on the board.
+        Ship can't neighbor with another ship."""
         for row in board.fields:
             for field in row:
                 if field.x <= self.x <= field.x + field.width:

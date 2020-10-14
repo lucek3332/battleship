@@ -1,8 +1,6 @@
 import socket
 import pickle
 
-HEADERSIZE = 20
-
 
 class Network:
     def __init__(self):
@@ -21,12 +19,12 @@ class Network:
             pass
 
     def send(self, data):
-        # Sending
+        # Sending data with fixed length header
         data_bytes = pickle.dumps(data)
         header = "{0:<20}".format(len(data_bytes))
         data = bytes(header, "utf-8") + data_bytes
         self.client.send(data)
-        # Receiving
+        # Receiving data with fixed length header
         data_bytes = b""
         new_data = True
         while True:

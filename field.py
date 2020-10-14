@@ -31,8 +31,6 @@ class Field:
             pygame.draw.line(win, self.lines_color, (self.x, self.y + self.height), (self.x + self.width, self.y), 4)
         elif self.hitted:
             pygame.draw.circle(win, self.circle_color, (round(self.x + self.width/2), round(self.y + self.height/2)), 5)
-        # if self.ship:
-        #     pygame.draw.rect(win, (0, 255, 0), self.rect)
 
     def click(self):
         pos = pygame.mouse.get_pos()
@@ -47,6 +45,7 @@ class Field:
         return False
 
     def isShipPoss(self, ship):
+        """Constraints for setting up ships on the board. Ships can't go out of the board."""
         if ship.position == "horizontal":
             if self.col + ship.mast <= 10:
                 return True

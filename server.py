@@ -21,6 +21,7 @@ def threaded_client(c, player, gameID):
     global currentPlayers
     c.send(str.encode(str(player)))
     while True:
+        # Receiving data with fixed length header
         try:
             data_bytes = b""
             new_data = True
@@ -34,17 +35,20 @@ def threaded_client(c, player, gameID):
                     if len(data_bytes) == data_len:
                         break
             data = pickle.loads(data_bytes)
+
             if gameID in games:
                 game = games[gameID]
 
                 if not data:
                     break
                 else:
+                    # Exchange of starting board positions
                     if isinstance(data, Board):
                         if player == 0:
                             game.boards[0] = data
                         else:
                             game.boards[1] = data
+                    # Gameplay
                     if isinstance(data, tuple):
                         if data[0] == "missed":
                             if player == 0:
@@ -60,6 +64,7 @@ def threaded_client(c, player, gameID):
                             else:
                                 game.turn = "1"
                                 game.boards[0] = data[1]
+                    # Sending data with fixed length header
                     reply = game
                     sending_bytes = pickle.dumps(reply)
                     header_sending = "{0:<20}".format(len(sending_bytes))
@@ -70,6 +75,7 @@ def threaded_client(c, player, gameID):
         except:
             break
     print("Lost connection")
+    # Handling disconnection and closing games
     try:
         if currentPlayers % 2 == 1:
             del games[gameID]

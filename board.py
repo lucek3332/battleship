@@ -41,6 +41,8 @@ class Board:
         return set(surrounding)
 
     def looking_ship(self, shot_row, shot_col):
+        """Marking ensured fields with no ship during the shooting.
+        If player sunk entire ship, marking all surrounding fields around ship as hitted."""
         ship_fields = {(shot_row, shot_col)}
         ship_len = 1
         surrounding = self.surrounding_fields(shot_row, shot_col) - ship_fields
@@ -68,6 +70,7 @@ class Board:
                 self.fields[f[0]][f[1]].hitted = True
 
     def is_ready(self):
+        """Checking for placing all ships on the board."""
         ship_count = sum(1 if f.ship else 0 for row in self.fields for f in row)
         if ship_count == 20:
             return True

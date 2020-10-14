@@ -17,6 +17,7 @@ hitted_sound = pygame.mixer.Sound("sounds/canon.wav")
 winner_sound = pygame.mixer.Sound("sounds/winner.wav")
 lost_sound = pygame.mixer.Sound("sounds/lost.wav")
 
+# General display settings
 screenWidth = 1000
 screenHeight = 800
 pygame.display.set_icon(icon)
@@ -50,7 +51,7 @@ class Button:
                 return True
         return False
 
-
+# Helper drawing functions for each game status
 def redrawWindowSetting(win, my_board, ships, buttons, wins, loses):
     win.fill((162, 213, 252))
     font = pygame.font.SysFont("Arial", 40)
@@ -134,7 +135,7 @@ def redrawWindowPlaying(win, my_board, enemy_board, ships, playerID, game, ships
     win.blit(ships_counter, (820, 660))
     pygame.display.update()
 
-
+# Main game loop
 def main():
     run = True
     b = Board()
@@ -146,18 +147,23 @@ def main():
     loses = 0
     status_game = "setting up"
     while run:
+        # Setting up your ships
         if status_game == 'setting up':
             redrawWindowSetting(screen, b, ships, Button.buttons, wins, loses)
             for event in pygame.event.get():
+                # Quit game
                 if event.type == pygame.QUIT:
                     run = False
                     pygame.quit()
+                # Reset ships
                 if event.type == pygame.MOUSEBUTTONUP and reset_btn.click():
                     b.reset_board(ships)
+                # Ready to play
                 if event.type == pygame.MOUSEBUTTONUP and play_btn.click() and b.is_ready():
                     status_game = "connecting"
                     play_sound.play()
                     pygame.time.delay(100)
+                # Drag, rotate ships
                 for ship in ships:
                     if event.type == pygame.MOUSEBUTTONUP and ship.click() and not ship.placed:
                         if ship.draging:
@@ -168,19 +174,26 @@ def main():
                             ship.rotate()
                     elif event.type == pygame.MOUSEMOTION and ship.draging is True:
                         ship.drag()
+        # Connecting to server
         elif status_game == "connecting":
             n = Network()
             status_game = "waiting"
+        # Waiting for another player
         elif status_game == "waiting":
+            # Sending board, receiving game
             game = n.send(b)
             redrawWindowWaiting(screen, b, ships, wins, loses)
             for event in pygame.event.get():
+                # Quit game
                 if event.type == pygame.QUIT:
                     run = False
                     pygame.quit()
+            # Another player has connected
             if game.both_connected:
                 status_game = "playing"
+        # Main part - gameplay
         elif status_game == "playing":
+            # Getting game with actual boards from server
             game = n.send("get game")
             if n.id == "0":
                 b = game.boards[0]
@@ -193,18 +206,23 @@ def main():
             b2.x = 550
             b2.y = 100
 
+            # Checking win condition
             if game.is_winner():
                 status_game = "winner"
 
+            # Checking another player disconnection, if so start new game and reset board
             if not game.both_connected:
                 status_game = "player disconnected"
                 b.reset_board(ships)
 
             redrawWindowPlaying(screen, b, b2, ships, n.id, game, ships_count, wins, loses)
+
             for event in pygame.event.get():
+                # Quit game
                 if event.type == pygame.QUIT:
                     run = False
                     pygame.quit()
+                # Shooting
                 if event.type == pygame.MOUSEBUTTONUP and game.turn == n.id:
                     for row in b2.fields:
                         for field in row:
@@ -218,6 +236,7 @@ def main():
                                         ships_count = 0
                                 else:
                                     n.send(("missed", b2))
+        # End of game - reset board, closing socket
         elif status_game == "winner":
             redrawWindowWinner(screen, game, n.id)
             if n.id == game.winner:
@@ -230,6 +249,7 @@ def main():
             status_game = "setting up"
             b.reset_board(ships)
             n.close()
+        # Another player has disconnected - start new game, reset board, closing socket
         elif status_game == "player disconnected":
             redrawWindowDisconnected(screen)
             pygame.time.delay(2000)

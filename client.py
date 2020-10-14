@@ -10,6 +10,12 @@ pygame.init()
 icon = pygame.image.load("images/icon.png")
 
 # Music / sounds
+pygame.mixer.music.load("sounds/music.wav")
+pygame.mixer.music.play(-1)
+play_sound = pygame.mixer.Sound("sounds/yessir.wav")
+hitted_sound = pygame.mixer.Sound("sounds/canon.wav")
+winner_sound = pygame.mixer.Sound("sounds/winner.wav")
+lost_sound = pygame.mixer.Sound("sounds/lost.wav")
 
 screenWidth = 1000
 screenHeight = 800
@@ -150,6 +156,8 @@ def main():
                     b.reset_board(ships)
                 if event.type == pygame.MOUSEBUTTONUP and play_btn.click() and b.is_ready():
                     status_game = "connecting"
+                    play_sound.play()
+                    pygame.time.delay(100)
                 for ship in ships:
                     if event.type == pygame.MOUSEBUTTONUP and ship.click() and not ship.placed:
                         if ship.draging:
@@ -204,6 +212,7 @@ def main():
                                 if field.ship:
                                     b2.looking_ship(field.row, field.col)
                                     n.send(("hitted", b2))
+                                    hitted_sound.play()
                                     ships_count += 1
                                     if ships_count > 19:
                                         ships_count = 0
@@ -211,13 +220,16 @@ def main():
                                     n.send(("missed", b2))
         elif status_game == "winner":
             redrawWindowWinner(screen, game, n.id)
-            pygame.time.delay(2000)
             if n.id == game.winner:
                 wins += 1
+                winner_sound.play()
             else:
                 loses += 1
+                lost_sound.play()
+            pygame.time.delay(2000)
             status_game = "setting up"
             b.reset_board(ships)
+            n.close()
         elif status_game == "player disconnected":
             redrawWindowDisconnected(screen)
             pygame.time.delay(2000)

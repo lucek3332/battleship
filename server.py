@@ -66,10 +66,11 @@ def threaded_client(c, player, gameID):
                                 game.boards[0] = data[1]
                     # Sending data with fixed length header
                     reply = game
-                    sending_bytes = pickle.dumps(reply)
-                    header_sending = "{0:<20}".format(len(sending_bytes))
-                    sending = bytes(header_sending, "utf-8") + sending_bytes
-                    c.sendall(sending)
+                    if reply:
+                        sending_bytes = pickle.dumps(reply)
+                        header_sending = "{0:<20}".format(len(sending_bytes))
+                        sending = bytes(header_sending, "utf-8") + sending_bytes
+                        c.sendall(sending)
             else:
                 break
         except:
@@ -98,11 +99,23 @@ while True:
     print("Connected to {}".format(addr))
     p = 0
     currentPlayers += 1
-    gameID = (currentPlayers - 1) // 2
+    game_list = sorted(game for game in games)
     if currentPlayers % 2 == 1:
-        games[gameID] = Game(gameID)
+        if not game_list:
+            gameID = 0
+            games[gameID] = Game(gameID)
+        else:
+            for id in range(game_list[-1]+2):
+                if id not in game_list:
+                    gameID = id
+                    games[gameID] = Game(gameID)
+                    break
         print("Creating new game: {}".format(gameID))
     else:
-        games[gameID].both_connected = True
+        for id in range(game_list[-1]+2):
+            if id in game_list and not games[id].both_connected:
+                gameID = id
+                games[gameID].both_connected = True
+                print("Game nr {} has just started".format(gameID))
         p = 1
     start_new_thread(threaded_client, (conn, p, gameID))

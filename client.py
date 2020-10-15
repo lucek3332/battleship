@@ -193,6 +193,11 @@ def main():
                 status_game = "playing"
         # Main part - gameplay
         elif status_game == "playing":
+            # Checking another player disconnection, if so start new game and reset board
+            if not game.both_connected:
+                status_game = "player disconnected"
+                b.reset_board(ships)
+                continue
             # Getting game with actual boards from server
             game = n.send("get game")
             if n.id == "0":
@@ -209,11 +214,6 @@ def main():
             # Checking win condition
             if game.is_winner():
                 status_game = "winner"
-
-            # Checking another player disconnection, if so start new game and reset board
-            if not game.both_connected:
-                status_game = "player disconnected"
-                b.reset_board(ships)
 
             redrawWindowPlaying(screen, b, b2, ships, n.id, game, ships_count, wins, loses)
 

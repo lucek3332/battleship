@@ -28,14 +28,18 @@ class Network:
         data_bytes = b""
         new_data = True
         while True:
-            if new_data:
-                data_len = int(self.client.recv(20))
-                new_data = False
-            else:
-                packet = self.client.recv(1024)
-                data_bytes += packet
-                if len(data_bytes) == data_len:
-                    break
+            try:
+                if new_data:
+                    data_len = int(self.client.recv(20))
+                    new_data = False
+                else:
+                    packet = self.client.recv(1024)
+                    data_bytes += packet
+                    if len(data_bytes) == data_len:
+                        break
+            except Exception as e:
+                print(e)
+                break
         return pickle.loads(data_bytes)
 
     def close(self):

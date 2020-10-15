@@ -6,6 +6,10 @@ Server create game with 2 first, random players in queue.
 Server can handle unlimited games at the same time.
 Connection to server take place after setting up all ships.
 
+## Requirements
+You need Python with installed Pygame module to play this game.
+Then you need to change IP address for server to your local machine IP address in server.py and network.py files.
+
 ## Controls
 ### Setting up ships
 For setting up the ship on the board, click on the ship, drag in correct place and click again.

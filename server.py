@@ -5,7 +5,7 @@ from board import Board
 import pickle
 
 
-server = "192.168.0.220"  # For test connection write your local IP address here
+server = "192.168.0.220"  # Write your local IP address here
 port = 5555
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

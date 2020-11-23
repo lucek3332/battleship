@@ -9,6 +9,7 @@ Connection to server take place after setting up all ships.
 ## Requirements
 You need Python with installed Pygame module to play this game.
 Then you need to change IP address for server to your local machine IP address in server.py and network.py files.
+Run server.py first, then client.py. Enjoy game!
 
 ## Controls
 ### Setting up ships
@@ -24,3 +25,6 @@ Player turn is changing after missed shot.
 
 ## Winning
 Player who sink all enemy ships, wins.
+
+## Known bugs
+Sometimes, when one player has disconnected, the other one gets disconnected too.
